@@ -76,32 +76,38 @@
     <h1>检测结果</h1>
     <div class="dashed-box">
       <p>源视频：<strong>{{video}}</strong></p>
-      {% if results.clips|length == 0 %}
+      {% if error %}
+        <div style="padding:0.8em;margin:0.8em 0;border:1px solid #f5c6cb;background:#f8d7da;color:#721c24;border-radius:6px;">错误：{{ error }}</div>
+      {% endif %}
+      {% if not results or results.clips|length == 0 %}
         <p>未检测到明显突增片段。</p>
       {% else %}
         <div class="download-all">
           <a href="/audio-detect/clips-zip/{{base}}">下载所有片段（ZIP，含音频+视频）</a>
         </div>
         <div class="results-container">
-      {% for c in results.clips %}
-        <li>
-          起: {{c.start}}s - 终: {{c.end}}s —
-          <a href="/audio-detect/file/{{c.file}}">下载音频</a> |
-          <a href="/audio-detect/file/{{c.video}}">下载视频片段</a>
-          <br>
-          <video controls width="480" preload="none">
-            <source src="/audio-detect/file/{{c.video}}" type="video/mp4">
-            你的浏览器不支持视频播放。
-          </video>
-          <br>
-          <audio controls preload="none">
-            <source src="/audio-detect/file/{{c.file}}" type="audio/wav">
-            你的浏览器不支持音频播放。
-          </audio>
-        </li>
-      {% endfor %}
-      </ul>
-    {% endif %}
-    <p><a href="/audio-detect/">返回上传</a></p>
+          {% for c in results.clips %}
+            <div class="clip-item">
+              <div class="clip-info"><strong>时间段：</strong> {{c.start}}s - {{c.end}}s</div>
+              <div class="clip-links">
+                <a href="/audio-detect/file/{{c.file}}">下载音频</a>
+                <a href="/audio-detect/file/{{c.video}}">下载视频片段</a>
+              </div>
+              <div class="media-preview">
+                <video controls width="100%" preload="none">
+                  <source src="/audio-detect/file/{{c.video}}" type="video/mp4">
+                  你的浏览器不支持视频播放。
+                </video>
+                <audio controls preload="none" style="width:100%">
+                  <source src="/audio-detect/file/{{c.file}}" type="audio/wav">
+                  你的浏览器不支持音频播放。
+                </audio>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div style="text-align:center"><a href="/audio-detect/" class="back-link">« 返回上传</a></div>
   </body>
 </html>

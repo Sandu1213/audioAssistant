@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from processor import analyze_video
 import zipfile
 from io import BytesIO
+import time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
@@ -43,9 +44,58 @@ def upload():
     min_duration = max(1.0, min_duration)
     
     # analyze video and produce results
-    results = analyze_video(in_path, app.config['OUTPUT_FOLDER'], min_clip_duration=min_duration)
-    # results: dict with 'clips' list of {start,end,filename}
-    return render_template('results.html', results=results, video=filename, base=base)
+    error_msg = None
+    results = None
+    try:
+        results = analyze_video(in_path, app.config['OUTPUT_FOLDER'], min_clip_duration=min_duration)
+    except Exception as e:
+        # capture error and show to user
+        error_msg = str(e)
+    finally:
+        # 清理旧任务文件（保留最近 5 个上传）
+        try:
+            prune_old_tasks(app.config['UPLOAD_FOLDER'], app.config['OUTPUT_FOLDER'], keep=5)
+        except Exception:
+            # 不要因为清理失败而中断流程
+            pass
+
+    return render_template('results.html', results=results, video=filename, base=base, error=error_msg)
+
+
+def prune_old_tasks(upload_dir, output_dir, keep=5):
+    """只保留最近 keep 个上传任务的文件。
+
+    依据 upload_dir 中按修改时间排序的文件名（最新的保留），然后在 output_dir 中保留与这些名字前缀匹配的输出文件。
+    """
+    # collect uploaded files (full paths)
+    uploads = [os.path.join(upload_dir, p) for p in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, p))]
+    # sort by mtime desc
+    uploads.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    keep_uploads = uploads[:keep]
+    keep_basenames = set(os.path.splitext(os.path.basename(p))[0] for p in keep_uploads)
+
+    # remove old uploads
+    for p in uploads[keep:]:
+        try:
+            os.remove(p)
+        except Exception:
+            pass
+
+    # In outputs, we remove files that don't start with any of the keep basenames
+    for fn in os.listdir(output_dir):
+        full = os.path.join(output_dir, fn)
+        if not os.path.isfile(full):
+            continue
+        keep_this = False
+        for b in keep_basenames:
+            if fn.startswith(b):
+                keep_this = True
+                break
+        if not keep_this:
+            try:
+                os.remove(full)
+            except Exception:
+                pass
 
 
 @app.route(f'{URL_PREFIX}/file/<path:filename>')
@@ -64,6 +114,14 @@ def download_clips_zip(name):
                 zf.write(os.path.join(app.config['OUTPUT_FOLDER'], fn), arcname=fn)
     buf.seek(0)
     return send_file(buf, mimetype='application/zip', as_attachment=True, download_name=f"{name}.zip")
+
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    """处理文件过大的错误（通常不会触发，因为前端会阻止）"""
+    return render_template('results.html', 
+                         error="上传的文件超过大小限制（500MB），请选择较小的文件。",
+                         video=None, base=None, results=None)
 
 
 if __name__ == '__main__':

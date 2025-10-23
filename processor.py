@@ -13,12 +13,12 @@ def extract_audio_ffmpeg(video_path, out_wav):
         RuntimeError: If ffmpeg is not found in PATH
         subprocess.CalledProcessError: If ffmpeg conversion fails
     """
+    cmd = [
+        'ffmpeg', '-y', '-i', video_path,
+        '-vn', '-ac', '1', '-ar', '16000', '-acodec', 'pcm_s16le', '-f', 'wav', out_wav
+    ]
     try:
-        cmd = [
-            'ffmpeg', '-y', '-i', video_path,
-            '-vn', '-ac', '1', '-ar', '16000', '-acodec', 'pcm_s16le', '-f', 'wav', out_wav
-        ]
-        subprocess.check_call(cmd)
+        subprocess.check_call(cmd, stderr=subprocess.STDOUT)
     except FileNotFoundError:
         raise RuntimeError(
             "找不到 ffmpeg 命令。请确保已安装 ffmpeg 并添加到系统 PATH。\n"
@@ -26,6 +26,17 @@ def extract_audio_ffmpeg(video_path, out_wav):
             "1. 使用 Chocolatey: choco install ffmpeg\n"
             "2. 或从 https://ffmpeg.org/download.html 下载，解压后将 bin 目录添加到 PATH"
         )
+    except subprocess.CalledProcessError as e:
+        # Try to capture output if available
+        msg = getattr(e, 'output', None)
+        if msg:
+            try:
+                msg = msg.decode(errors='ignore')
+            except Exception:
+                msg = str(msg)
+        else:
+            msg = f"ffmpeg 返回非零退出状态: {e.returncode}"
+        raise RuntimeError(f"ffmpeg 转码音频失败: {msg}")
 
 
 def compute_rms_from_wav(wav_path, frame_size_samples, hop_size_samples):
@@ -106,7 +117,20 @@ def export_clip_ffmpeg(wav_in, start_s, end_s, out_wav):
         'ffmpeg', '-y', '-ss', f"{start_s}", '-to', f"{end_s}", '-i', wav_in,
         '-ac', '1', '-ar', '16000', '-f', 'wav', out_wav
     ]
-    subprocess.check_call(cmd)
+    try:
+        subprocess.check_call(cmd, stderr=subprocess.STDOUT)
+    except FileNotFoundError:
+        raise RuntimeError("找不到 ffmpeg 命令（export_clip_ffmpeg）。")
+    except subprocess.CalledProcessError as e:
+        msg = getattr(e, 'output', None)
+        if msg:
+            try:
+                msg = msg.decode(errors='ignore')
+            except Exception:
+                msg = str(msg)
+        else:
+            msg = f"ffmpeg 返回非零退出状态: {e.returncode}"
+        raise RuntimeError(f"导出音频片段失败: {msg}")
 
 
 def export_video_clip_ffmpeg(video_in, start_s, end_s, out_video):
@@ -115,7 +139,20 @@ def export_video_clip_ffmpeg(video_in, start_s, end_s, out_video):
         'ffmpeg', '-y', '-ss', f"{start_s}", '-to', f"{end_s}", '-i', video_in,
         '-c', 'copy', out_video
     ]
-    subprocess.check_call(cmd)
+    try:
+        subprocess.check_call(cmd, stderr=subprocess.STDOUT)
+    except FileNotFoundError:
+        raise RuntimeError("找不到 ffmpeg 命令（export_video_clip_ffmpeg）。")
+    except subprocess.CalledProcessError as e:
+        msg = getattr(e, 'output', None)
+        if msg:
+            try:
+                msg = msg.decode(errors='ignore')
+            except Exception:
+                msg = str(msg)
+        else:
+            msg = f"ffmpeg 返回非零退出状态: {e.returncode}"
+        raise RuntimeError(f"导出视频片段失败: {msg}")
 
 
 def get_video_duration(video_path):

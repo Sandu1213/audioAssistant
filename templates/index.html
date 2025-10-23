@@ -41,7 +41,15 @@
             border-radius: 4px;
         }
         #selectedFile { margin: 0.5em 0; color: #333; }
-        
+        .error-message {
+            display: none;
+            margin: 0.5em 0;
+            padding: 0.5em 1em;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -52,8 +60,9 @@
                 <label for="fileInput">选择视频文件：</label><br>
                 <input type="file" id="fileInput" name="file" accept="video/mp4,video/x-m4v,video/*" required 
                        onchange="updateFileName(this)">
-                <div class="hint">支持常见视频格式：MP4, MOV, AVI 等</div>
+                <div class="hint">支持常见视频格式：MP4, MOV, AVI 等（文件大小不超过 500MB）</div>
                 <div id="selectedFile"></div>
+                <div id="fileError" class="error-message"></div>
             </div>
             <div class="form-group">
                 <label for="minDuration">最小片段长度（秒）：</label><br>
@@ -70,22 +79,42 @@
     </div>
 
     <script>
+        const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+
         function updateFileName(input) {
             const fileInfo = document.getElementById('selectedFile');
+            const errorDiv = document.getElementById('fileError');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            errorDiv.style.display = 'none';
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                fileInfo.textContent = `已选择: ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
-                document.getElementById('submitBtn').disabled = false;
+                const fileSizeMB = file.size / 1024 / 1024;
+                fileInfo.textContent = `已选择: ${file.name} (${fileSizeMB.toFixed(1)} MB)`;
+                
+                if (file.size > MAX_FILE_SIZE) {
+                    errorDiv.textContent = `文件大小 (${fileSizeMB.toFixed(1)} MB) 超过限制（500MB），请选择较小的文件。`;
+                    errorDiv.style.display = 'block';
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.disabled = false;
+                }
             } else {
                 fileInfo.textContent = '';
+                submitBtn.disabled = true;
             }
         }
 
         function handleSubmit(event) {
-            const form = event.target;
-            const fileInput = form.querySelector('input[type="file"]');
+            const fileInput = event.target.querySelector('input[type="file"]');
             if (!fileInput.files || !fileInput.files[0]) {
                 alert('请先选择一个视频文件');
+                return false;
+            }
+            
+            const file = fileInput.files[0];
+            if (file.size > MAX_FILE_SIZE) {
+                document.getElementById('fileError').style.display = 'block';
                 return false;
             }
             
