@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>视频音量突增检测</title>
+    <style>
+        body { max-width: 800px; margin: 2em auto; padding: 0 1em; font-family: system-ui, -apple-system, sans-serif; }
+        .form-group { margin: 1em 0; }
+        .hint { color: #666; font-size: 0.9em; margin: 0.5em 0; }
+        #uploadForm { padding: 1em; border: 2px dashed #ccc; border-radius: 4px; }
+        #submitBtn { padding: 0.5em 1em; font-size: 1em; }
+        #submitBtn:disabled { background: #ccc; }
+        .progress { display: none; margin: 1em 0; }
+        #selectedFile { margin: 0.5em 0; color: #333; }
+    </style>
+</head>
+<body>
+    <h1>视频音量突增检测</h1>
+    <div id="uploadForm">
+        <form action="/audio-detect/upload" method="post" enctype="multipart/form-data" onsubmit="return handleSubmit(event)">
+            <div class="form-group">
+                <label for="fileInput">选择视频文件：</label><br>
+                <input type="file" id="fileInput" name="file" accept="video/mp4,video/x-m4v,video/*" required 
+                       onchange="updateFileName(this)">
+                <div class="hint">支持常见视频格式：MP4, MOV, AVI 等</div>
+                <div id="selectedFile"></div>
+            </div>
+            <div class="form-group">
+                <button type="submit" id="submitBtn">上传并分析</button>
+                <div class="progress" id="uploadProgress">
+                    <p>正在上传并处理视频，请稍候...</p>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const fileInfo = document.getElementById('selectedFile');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                fileInfo.textContent = `已选择: ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+                document.getElementById('submitBtn').disabled = false;
+            } else {
+                fileInfo.textContent = '';
+            }
+        }
+
+        function handleSubmit(event) {
+            const form = event.target;
+            const fileInput = form.querySelector('input[type="file"]');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('请先选择一个视频文件');
+                return false;
+            }
+            
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('uploadProgress').style.display = 'block';
+            return true;
+        }
+    </script>
+</body>
+</html>

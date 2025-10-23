@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>检测结果</title>
+  </head>
+  <body>
+    <h1>检测结果</h1>
+    <p>源视频：{{video}}</p>
+    {% if results.clips|length == 0 %}
+      <p>未检测到明显突增片段。</p>
+    {% else %}
+  <p><a href="/audio-detect/clips-zip/{{base}}">下载所有片段（ZIP）</a></p>
+      <ul>
+      {% for c in results.clips %}
+        <li>
+          起: {{c.start}}s - 终: {{c.end}}s —
+          <a href="/audio-detect/clip/{{c.file}}">下载</a>
+          <br>
+          <audio controls preload="none">
+            <source src="/audio-detect/clip/{{c.file}}" type="audio/wav">
+            你的浏览器不支持音频播放。
+          </audio>
+        </li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+    <p><a href="/audio-detect/">返回上传</a></p>
+  </body>
+</html>
