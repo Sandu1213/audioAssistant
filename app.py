@@ -11,7 +11,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, 'outputs')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path=f'/audio-detect/static')
 # 配置
 app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
 app.config['OUTPUT_FOLDER'] = OUTPUT_DIR
@@ -37,8 +37,13 @@ def upload():
     base = os.path.splitext(filename)[0]
     in_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     f.save(in_path)
+    # 获取自定义片段长度
+    min_duration = request.form.get('min_duration', type=float, default=5.0)
+    # 限制最小长度不小于1秒
+    min_duration = max(1.0, min_duration)
+    
     # analyze video and produce results
-    results = analyze_video(in_path, app.config['OUTPUT_FOLDER'])
+    results = analyze_video(in_path, app.config['OUTPUT_FOLDER'], min_clip_duration=min_duration)
     # results: dict with 'clips' list of {start,end,filename}
     return render_template('results.html', results=results, video=filename, base=base)
 

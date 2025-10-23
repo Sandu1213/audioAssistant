@@ -3,20 +3,50 @@
 <head>
     <meta charset="utf-8">
     <title>视频音量突增检测</title>
+    <link rel="icon" type="image/x-icon" href="/audio-detect/static/audio.ico">
     <style>
         body { max-width: 800px; margin: 2em auto; padding: 0 1em; font-family: system-ui, -apple-system, sans-serif; }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center;
+            margin-bottom: 1.5em;
+        }
         .form-group { margin: 1em 0; }
         .hint { color: #666; font-size: 0.9em; margin: 0.5em 0; }
-        #uploadForm { padding: 1em; border: 2px dashed #ccc; border-radius: 4px; }
-        #submitBtn { padding: 0.5em 1em; font-size: 1em; }
-        #submitBtn:disabled { background: #ccc; }
-        .progress { display: none; margin: 1em 0; }
+        .dashed-box {
+            padding: 1.5em;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            background-color: #fcfcfc;
+            margin-bottom: 2em;
+        }        
+        #uploadForm { margin-bottom: 2em; }
+        #submitBtn { 
+            padding: 0.5em 1.5em; 
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #submitBtn:hover { background-color: #45a049; }
+        #submitBtn:disabled { background: #cccccc; cursor: not-allowed; }
+        .progress { 
+            display: none; 
+            margin: 1em 0;
+            padding: 1em;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+        }
         #selectedFile { margin: 0.5em 0; color: #333; }
+        
     </style>
 </head>
 <body>
     <h1>视频音量突增检测</h1>
-    <div id="uploadForm">
+    <div id="uploadForm" class="dashed-box">
         <form action="/audio-detect/upload" method="post" enctype="multipart/form-data" onsubmit="return handleSubmit(event)">
             <div class="form-group">
                 <label for="fileInput">选择视频文件：</label><br>
@@ -24,6 +54,11 @@
                        onchange="updateFileName(this)">
                 <div class="hint">支持常见视频格式：MP4, MOV, AVI 等</div>
                 <div id="selectedFile"></div>
+            </div>
+            <div class="form-group">
+                <label for="minDuration">最小片段长度（秒）：</label><br>
+                <input type="number" id="minDuration" name="min_duration" value="5.0" min="1.0" step="0.5" required>
+                <div class="hint">每个导出片段的最小长度，不小于1秒</div>
             </div>
             <div class="form-group">
                 <button type="submit" id="submitBtn">上传并分析</button>

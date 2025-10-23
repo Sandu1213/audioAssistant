@@ -118,10 +118,28 @@ def export_video_clip_ffmpeg(video_in, start_s, end_s, out_video):
     subprocess.check_call(cmd)
 
 
-def analyze_video(video_path, output_folder):
+def get_video_duration(video_path):
+    """获取视频总长度（秒）"""
+    cmd = [
+        'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1', video_path
+    ]
+    try:
+        duration = float(subprocess.check_output(cmd).decode().strip())
+        return duration
+    except (subprocess.CalledProcessError, ValueError, FileNotFoundError):
+        return None
+
+def analyze_video(video_path, output_folder, min_clip_duration=5.0):
     base = os.path.splitext(os.path.basename(video_path))[0]
     tmp_wav = os.path.join(output_folder, f'{base}_extracted.wav')
     extract_audio_ffmpeg(video_path, tmp_wav)
+    
+    # 获取视频总长度
+    total_duration = get_video_duration(video_path)
+    if total_duration is None:
+        raise RuntimeError("无法获取视频长度，请确保已安装 ffprobe")
+    
     # parameters
     # use 50ms frame, 20ms hop
     # frame_size in samples
@@ -140,12 +158,12 @@ def analyze_video(video_path, output_folder):
         # add small padding
         start = max(0, st - 0.05)
         end = ed + 0.05
-        # ensure minimum 5s duration
+        # ensure minimum clip duration and don't exceed total video length
         duration = end - start
-        if duration < 5.0:
-            extra = (5.0 - duration) / 2
+        if duration < min_clip_duration:
+            extra = (min_clip_duration - duration) / 2
             start = max(0, start - extra)
-            end = end + extra
+            end = min(total_duration, end + extra)
         export_clip_ffmpeg(tmp_wav, start, end, out_path)
         # export corresponding video clip
         out_video_name = f"{base}_clip_{uid}.mp4"

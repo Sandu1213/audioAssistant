@@ -2,16 +2,87 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>检测结果</title>
+    <title>检测结果 - 视频音量突增检测</title>
+    <link rel="icon" type="image/x-icon" href="/audio-detect/static/audio.ico">
+    <style>
+      body { 
+        max-width: 800px; 
+        margin: 2em auto; 
+        padding: 0 1em; 
+        font-family: system-ui, -apple-system, sans-serif; 
+      }
+      h1 { 
+        color: #2c3e50; 
+        text-align: center;
+        margin-bottom: 1.5em;
+      }
+      .dashed-box {
+        padding: 1.5em;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        background-color: #fcfcfc;
+        margin-bottom: 2em;
+      }
+      .results-container {
+        margin: 1em 0;
+      }
+      .download-all {
+        text-align: center;
+        margin: 1em 0;
+      }
+      .download-all a {
+        display: inline-block;
+        padding: 0.5em 1em;
+        background-color: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+      }
+      .download-all a:hover {
+        background-color: #45a049;
+      }
+      .clip-item {
+        margin-bottom: 2em;
+        padding: 1em;
+        border: 1px solid #eee;
+        border-radius: 4px;
+      }
+      .clip-info {
+        margin-bottom: 1em;
+      }
+      .clip-links a {
+        color: #2196F3;
+        text-decoration: none;
+        margin-right: 1em;
+      }
+      .clip-links a:hover {
+        text-decoration: underline;
+      }
+      .media-preview {
+        margin: 1em 0;
+      }
+      .back-link {
+        display: inline-block;
+        margin-top: 1em;
+        color: #666;
+        text-decoration: none;
+      }
+      .back-link:hover {
+        color: #333;
+      }
+    </style>
   </head>
   <body>
     <h1>检测结果</h1>
-    <p>源视频：{{video}}</p>
-    {% if results.clips|length == 0 %}
-      <p>未检测到明显突增片段。</p>
-    {% else %}
-  <p><a href="/audio-detect/clips-zip/{{base}}">下载所有片段（ZIP，含音频+视频）</a></p>
-      <ul>
+    <div class="dashed-box">
+      <p>源视频：<strong>{{video}}</strong></p>
+      {% if results.clips|length == 0 %}
+        <p>未检测到明显突增片段。</p>
+      {% else %}
+        <div class="download-all">
+          <a href="/audio-detect/clips-zip/{{base}}">下载所有片段（ZIP，含音频+视频）</a>
+        </div>
+        <div class="results-container">
       {% for c in results.clips %}
         <li>
           起: {{c.start}}s - 终: {{c.end}}s —
