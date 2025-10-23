@@ -43,9 +43,9 @@ def upload():
     return render_template('results.html', results=results, video=filename, base=base)
 
 
-@app.route(f'{URL_PREFIX}/clip/<path:filename>')
-def download_clip(filename):
-    """下载单个音频片段"""
+@app.route(f'{URL_PREFIX}/file/<path:filename>')
+def download_file(filename):
+    """下载单个文件（音频或视频）"""
     return send_from_directory(app.config['OUTPUT_FOLDER'], filename, as_attachment=True)
 
 

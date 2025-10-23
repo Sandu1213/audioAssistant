@@ -109,6 +109,15 @@ def export_clip_ffmpeg(wav_in, start_s, end_s, out_wav):
     subprocess.check_call(cmd)
 
 
+def export_video_clip_ffmpeg(video_in, start_s, end_s, out_video):
+    # copy video and audio streams for video clip extraction
+    cmd = [
+        'ffmpeg', '-y', '-ss', f"{start_s}", '-to', f"{end_s}", '-i', video_in,
+        '-c', 'copy', out_video
+    ]
+    subprocess.check_call(cmd)
+
+
 def analyze_video(video_path, output_folder):
     base = os.path.splitext(os.path.basename(video_path))[0]
     tmp_wav = os.path.join(output_folder, f'{base}_extracted.wav')
@@ -131,6 +140,16 @@ def analyze_video(video_path, output_folder):
         # add small padding
         start = max(0, st - 0.05)
         end = ed + 0.05
+        # ensure minimum 5s duration
+        duration = end - start
+        if duration < 5.0:
+            extra = (5.0 - duration) / 2
+            start = max(0, start - extra)
+            end = end + extra
         export_clip_ffmpeg(tmp_wav, start, end, out_path)
-        clips.append({'start': round(st,3), 'end': round(ed,3), 'file': out_name})
+        # export corresponding video clip
+        out_video_name = f"{base}_clip_{uid}.mp4"
+        out_video_path = os.path.join(output_folder, out_video_name)
+        export_video_clip_ffmpeg(video_path, start, end, out_video_path)
+        clips.append({'start': round(st,3), 'end': round(ed,3), 'file': out_name, 'video': out_video_name})
     return {'clips': clips, 'audio_file': os.path.basename(tmp_wav)}

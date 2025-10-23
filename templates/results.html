@@ -10,15 +10,21 @@
     {% if results.clips|length == 0 %}
       <p>未检测到明显突增片段。</p>
     {% else %}
-  <p><a href="/audio-detect/clips-zip/{{base}}">下载所有片段（ZIP）</a></p>
+  <p><a href="/audio-detect/clips-zip/{{base}}">下载所有片段（ZIP，含音频+视频）</a></p>
       <ul>
       {% for c in results.clips %}
         <li>
           起: {{c.start}}s - 终: {{c.end}}s —
-          <a href="/audio-detect/clip/{{c.file}}">下载</a>
+          <a href="/audio-detect/file/{{c.file}}">下载音频</a> |
+          <a href="/audio-detect/file/{{c.video}}">下载视频片段</a>
+          <br>
+          <video controls width="480" preload="none">
+            <source src="/audio-detect/file/{{c.video}}" type="video/mp4">
+            你的浏览器不支持视频播放。
+          </video>
           <br>
           <audio controls preload="none">
-            <source src="/audio-detect/clip/{{c.file}}" type="audio/wav">
+            <source src="/audio-detect/file/{{c.file}}" type="audio/wav">
             你的浏览器不支持音频播放。
           </audio>
         </li>
