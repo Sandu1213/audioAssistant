@@ -18,7 +18,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p uploads outputs
 
 # 暴露端口
-EXPOSE 5000
+EXPOSE 8000
 
-# 运行应用
-CMD ["python", "app.py"]
+# 运行应用(仅用于本地开发环境，不适合线上)
+# CMD ["python", "app.py"]
+
+# 启动 Gunicorn（监听 0.0.0.0:8000)
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]

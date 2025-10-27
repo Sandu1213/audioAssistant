@@ -88,22 +88,50 @@ def compute_rms_from_wav(wav_path, frame_size_samples, hop_size_samples):
 
 
 def detect_sudden_jumps(rms, sr, frame_size, hop_size, thresh_ratio=2.0, min_duration_s=0.2):
-    # rms: list of floats
+    """检测音频中的突变区间（音量突然增大的片段）
+    
+    参数:
+        rms: list[float] - RMS（均方根）值列表，表示音频能量
+        sr: int - 采样率（每秒采样点数）
+        frame_size: int - 分析窗口大小（采样点数）
+        hop_size: int - 窗口移动步长（采样点数）
+        thresh_ratio: float - 突变检测阈值比率，默认2.0表示能量超过中值2倍视为突变
+        min_duration_s: float - 最小突变持续时间（秒），默认0.2秒
+        
+    返回:
+        list[tuple] - 突变区间列表，每个元素为(开始时间, 结束时间)的元组
+    """
     import statistics
+    
+    # 计算滑动窗口大小（秒），用于计算局部中值
+    # 窗口时长为0.5秒，转换为帧数：0.5秒 / (每帧时长=hop_size/sr)
     win = max(1, int(0.5 / (hop_size / sr)))
-    # pad by reflecting edges
+    
+    # 通过反射边缘进行填充，确保首尾数据也能计算中值
     padded = ([rms[0]] * win) + rms + ([rms[-1]] * win)
+    
+    # 计算每个位置的局部中值（使用2*win+1的窗口大小）
     med = [statistics.median(padded[i:i+2*win+1]) for i in range(len(rms))]
+    
+    # 存储检测到的突变区间
     intervals = []
+    
+    # 计算每个位置的RMS是否超过局部中值的thresh_ratio倍
+    # 添加小量1e-12避免除零错误
     mask = [ (r / (m + 1e-12)) > thresh_ratio for r, m in zip(rms, med) ]
+    
+    # 遍历mask寻找连续的突变区间
     i = 0
     while i < len(mask):
-        if mask[i]:
+        if mask[i]:  # 找到突变起点
             j = i
+            # 向后搜索直到突变结束
             while j < len(mask) and mask[j]:
                 j += 1
+            # 将帧索引转换为时间（秒）
             start_time = i * hop_size / sr
             end_time = (j * hop_size + frame_size) / sr
+            # 只保留持续时间超过最小阈值的区间
             if end_time - start_time >= min_duration_s:
                 intervals.append((start_time, end_time))
             i = j

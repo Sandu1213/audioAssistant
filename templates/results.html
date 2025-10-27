@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>检测结果</title>
+    <title>分析检测结果</title>
     <link rel="icon" type="image/x-icon" href="/audio-detect/static/audio.ico">
     <style>
       body { 
@@ -76,6 +76,9 @@
     <h1>🎉检测结果🎉</h1>
     <div class="dashed-box">
       <p>源视频：<strong>{{video}}</strong></p>
+      {% if results and results.audio_file %}
+        <p>纯音频： <a href="/audio-detect/audio/{{ results.audio_file }}">{{ results.audio_file }}</a></p>
+      {% endif %}
       {% if error %}
         <div style="padding:0.8em;margin:0.8em 0;border:1px solid #f5c6cb;background:#f8d7da;color:#721c24;border-radius:6px;">错误：{{ error }}</div>
       {% endif %}

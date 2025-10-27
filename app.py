@@ -20,7 +20,7 @@ app.config['OUTPUT_FOLDER'] = OUTPUT_DIR
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 # URL 前缀，所有路由都加这个前缀
 URL_PREFIX = '/audio-detect'
-
+# URL_PREFIX = ''
 
 @app.route(f'{URL_PREFIX}/')
 def index():
@@ -104,6 +104,21 @@ def download_file(filename):
     return send_from_directory(app.config['OUTPUT_FOLDER'], filename, as_attachment=True)
 
 
+@app.route(f'{URL_PREFIX}/audio/<path:filename>')
+def download_audio(filename):
+    """单独的纯音频下载入口：只要文件存在且无异常就允许下载。"""
+    # 防止路径穿越，取 basename
+    fname = os.path.basename(filename)
+    full = os.path.join(app.config['OUTPUT_FOLDER'], fname)
+    if not os.path.isfile(full):
+        return ("请求的音频文件不存在或已被删除。", 404)
+    try:
+        return send_from_directory(app.config['OUTPUT_FOLDER'], fname, as_attachment=True)
+    except Exception as e:
+        # 返回友好错误信息
+        return (f"下载发生错误：{e}", 500)
+
+
 @app.route(f'{URL_PREFIX}/clips-zip/<name>')
 def download_clips_zip(name):
     # zip all files that start with name (convention used when exporting clips)
@@ -123,6 +138,6 @@ def request_entity_too_large(error):
                          error="上传的文件超过大小限制（500MB），请选择较小的文件。",
                          video=None, base=None, results=None)
 
-
+# (仅用于本地开发环境，不适合线上,上线前需注释掉)
 if __name__ == '__main__':
     app.run(debug=True)

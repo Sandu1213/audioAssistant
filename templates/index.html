@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>视频音量突增检测</title>
+    <title>音视频小助手</title>
     <link rel="icon" type="image/x-icon" href="/audio-detect/static/audio.ico">
     <style>
         body { max-width: 800px; margin: 2em auto; padding: 0 1em; font-family: system-ui, -apple-system, sans-serif; }
@@ -53,7 +53,7 @@
     </style>
 </head>
 <body>
-    <h1>视频音量突增检测-可检测噪音</h1>
+    <h1>音视频小助手-可检测噪音/提取音频</h1>
     <div id="uploadForm" class="dashed-box">
         <form action="/audio-detect/upload" method="post" enctype="multipart/form-data" onsubmit="return handleSubmit(event)">
             <div class="form-group">
@@ -67,7 +67,7 @@
             <div class="form-group">
                 <label for="minDuration">最小片段长度（秒）：</label><br>
                 <input type="number" id="minDuration" name="min_duration" value="5.0" min="1.0" step="0.5" required>
-                <div class="hint">每个导出片段的最小长度，不小于1秒</div>
+                <div class="hint">每个导出片段的最小长度，不小于1秒（最大不能超过视频长度）</div>
             </div>
             <div class="form-group">
                 <button type="submit" id="submitBtn">上传并分析</button>
